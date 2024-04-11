@@ -1,6 +1,4 @@
 import { Module, ValidationPipe } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { redisConfig, typeOrmConfig, errorMessagesConfig } from './config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -32,9 +30,7 @@ import { RedisModule } from '@nestjs-modules/ioredis';
     }),
     UserModule,
   ],
-  controllers: [AppController],
   providers: [
-    AppService,
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({

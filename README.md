@@ -1,49 +1,42 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Sections:
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+> [Getting Started](#Getting-Started)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+> [What if?](#What-If)
 
-## Description
+> [Social Login](#Social-login)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+# Getting Started
 
-## Installation
+### Install all necessary packages
 
 ```bash
+# run in terminal
 $ npm install
 ```
 
-## Storage launch
+### Env setup
+
+Copy `.env.example` to `.env` and populate it with missing/relevant environment variables.
+
+### Storage launch
+
+#### Using Docker
+
+If you have `Docker` installed on your machine just run `docker compose up` to launch development and test DBs.
+(use separate terminal since services are running in attached mode)
+
+#### Without Docker
+
+Since app is using `PostgreSQL`, download latest version of PostgreSQL from [here](http://postgresql.org/download/) to your computer and install it.
+Next launch 2 databases (with `psql` or something) with credentials identical for those you can find in `docker-compose.yml` file.
+
+### Run migrations
+
+1. Run migrations on development db, using:
 
 ```bash
-# development
-$ docker compose up
-```
-
-## Run migrations on DB
-
-```bash
-# development
-$ npm run migration:run
+$ npm run migrations:run
 ```
 
 ## Running the app
@@ -59,7 +52,9 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-## Test
+## Testing
+
+Since testing DB is synchronized with ORM, it's just needed to run one of the commands:
 
 ```bash
 # unit tests
@@ -72,16 +67,21 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Support
+# What if?
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+To handle a scale of 1000 user registration requests per second and 100,000 user login requests per second, we'd need a highly scalable architecture. First, we'd distribute the workload using load balancers (such as Nginx or HAProxy) to ensure even traffic distribution across multiple instances of our authentication service, orchestrated by Kubernetes. For user registration, we could leverage sharding techniques with TypeORM to partition data across multiple PostgreSQL database nodes, while Redis, integrated using ioredis, would serve as a cache layer to reduce database load. Docker and Docker Compose would facilitate containerization and deployment, ensuring consistency across environments. Additionally, we'd implement connection pooling and optimize database queries for performance, using Nest.js for the application logic. Additionally, we'd utilize asynchronous processing for tasks like email verification and token generation to minimize latency. Finally, we'd continuously monitor performance metrics and auto-scale resources as needed to maintain responsiveness under varying loads.
 
-## Stay in touch
+# Social Login
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+To implement social login integration with services like Google or GitHub into our User Authentication service prototype, we can follow a standard OAuth 2.0 flow. Below is a sequence diagram illustrating the process:
 
-## License
+![image](https://github.com/BigTako/USOF-Back-End/assets/87268303/fe2189f6-087d-47e9-914e-32b9aa111960)
 
-Nest is [MIT licensed](LICENSE).
+1. User Interaction: The user clicks on the "Login with Google/GitHub" button on the authentication service's login page.
+2. Redirect to OAuth Authorization Endpoint: The authentication service redirects the user to the OAuth authorization endpoint of the chosen social provider (Google or GitHub).
+3. OAuth Authorization Code Exchange: The user authenticates with their credentials on the social provider's login page. Upon successful authentication, the social provider redirects back to the authentication service with an OAuth authorization code.
+4. Exchange Code for Access Token: The authentication service exchanges the received authorization code for an access token by sending a request to the social provider's token endpoint.
+5. Receive Access Token: The social provider responds with an access token.
+6. Request User Info: The authentication service uses the access token to request user information from the social provider's user info endpoint.
+7. Receive User Info: The social provider responds with the user's information, such as username, email, and profile picture.
+8. Respond with JWT: The authentication service generates a JWT containing the user's information and responds to the user's browser.
