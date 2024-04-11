@@ -4,18 +4,23 @@ import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { DataSource } from 'typeorm';
 import { User } from './../src/user/user.entity';
+import { TwoArgsMessage } from '../src/config';
+import { ConfigService } from '@nestjs/config';
 
 process.env.NODE_ENV = 'test';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
+  let configService: ConfigService;
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
+
     await app.init();
     dataSource = app.get(DataSource);
     dataSource.synchronize();
@@ -24,6 +29,7 @@ describe('AppController (e2e)', () => {
   beforeEach(async () => {
     // clear database before each test runs
     await dataSource.createQueryBuilder().delete().from(User).execute();
+    configService = app.get<ConfigService>(ConfigService);
   });
 
   afterAll(async () => {
@@ -58,25 +64,29 @@ describe('AppController (e2e)', () => {
     });
 
     it('throws BadRequestException trying to signup user with existing username', async () => {
+      const { ENTITY_EXISTS } = configService.get('errorMessages') as {
+        ENTITY_EXISTS: TwoArgsMessage;
+      };
+
       await request(app.getHttpServer()).post('/user/signup').send(testUser);
       const res = await request(app.getHttpServer())
         .post('/user/signup')
         .send(testUser);
       expect(res.status).toBe(400);
-      expect(res.body.messages).toContain(
-        'User with this username already exists. Please try another one.',
-      );
+      expect(res.body.messages).toContain(ENTITY_EXISTS('User', 'username'));
     });
 
     it('throws BadRequestException trying to signup with invalid password', async () => {
+      const { INVALID_LENGTH_MIN } = configService.get('errorMessages') as {
+        INVALID_LENGTH_MIN: TwoArgsMessage;
+      };
+
       const res = await request(app.getHttpServer())
         .post('/user/signup')
         .send({ ...testUser, password: '123' });
 
       expect(res.status).toBe(400);
-      expect(res.body.messages).toContain(
-        'password must be longer than or equal to 8 characters',
-      );
+      expect(res.body.messages).toContain(INVALID_LENGTH_MIN('password', '8'));
     });
 
     it('signs up user without unnecessary data', async () => {
@@ -89,11 +99,15 @@ describe('AppController (e2e)', () => {
     });
 
     it('throws BadRequestException trying to signup user without username', async () => {
+      const { INVALID_TYPE } = configService.get('errorMessages') as {
+        INVALID_TYPE: TwoArgsMessage;
+      };
+
       const res = await request(app.getHttpServer())
         .post('/user/signup')
         .send({ password: '12345678' });
       expect(res.status).toBe(400);
-      expect(res.body.messages).toContain('username must be a string');
+      expect(res.body.messages).toContain(INVALID_TYPE('username', 'string'));
     });
 
     it('logs in user with correct credentials', async () => {
@@ -108,6 +122,10 @@ describe('AppController (e2e)', () => {
     });
 
     it('throws BadRequestException if credentials are not valid', async () => {
+      const { INVALID_CREDENTIALS } = configService.get('errorMessages') as {
+        INVALID_CREDENTIALS: string;
+      };
+
       await request(app.getHttpServer()).post('/user/signup').send(testUser);
 
       const res = await request(app.getHttpServer())
@@ -118,10 +136,14 @@ describe('AppController (e2e)', () => {
         });
 
       expect(res.status).toBe(400);
-      expect(res.body.messages).toContain('Invalid login or password');
+      expect(res.body.messages).toContain(INVALID_CREDENTIALS);
     });
 
     it('throws BadRequestException trying to login user with invalid password', async () => {
+      const { INVALID_LENGTH_MIN } = configService.get('errorMessages') as {
+        INVALID_LENGTH_MIN: TwoArgsMessage;
+      };
+
       await request(app.getHttpServer()).post('/user/signup').send(testUser);
 
       const res = await request(app.getHttpServer()).post('/user/login').send({
@@ -130,12 +152,14 @@ describe('AppController (e2e)', () => {
       });
 
       expect(res.status).toBe(400);
-      expect(res.body.messages).toContain(
-        'password must be longer than or equal to 8 characters',
-      );
+      expect(res.body.messages).toContain(INVALID_LENGTH_MIN('password', '8'));
     });
 
     it('throws BadRequestException trying to login user with invalid credentials', async () => {
+      const { INVALID_TYPE } = configService.get('errorMessages') as {
+        INVALID_TYPE: TwoArgsMessage;
+      };
+
       await request(app.getHttpServer()).post('/user/signup').send(testUser);
 
       const res = await request(app.getHttpServer()).post('/user/login').send({
@@ -143,7 +167,7 @@ describe('AppController (e2e)', () => {
       });
 
       expect(res.status).toBe(400);
-      expect(res.body.messages).toContain('password must be a string');
+      expect(res.body.messages).toContain(INVALID_TYPE('password', 'string'));
     });
 
     it('returns current authorized user after signup', async () => {
@@ -189,11 +213,12 @@ describe('AppController (e2e)', () => {
     });
 
     it('throws UnauthorizedException trying to get current user without token', async () => {
+      const { UNAUTHORIZED } = configService.get('errorMessages') as {
+        UNAUTHORIZED: string;
+      };
       const res = await request(app.getHttpServer()).get('/user/me');
       expect(res.status).toBe(401);
-      expect(res.body.messages).toContain(
-        'You are not authorized to access this resource.',
-      );
+      expect(res.body.messages).toContain(UNAUTHORIZED);
     });
 
     it('loggs out current user', async () => {
@@ -212,11 +237,12 @@ describe('AppController (e2e)', () => {
     });
 
     it('throws UnauthorizedException trying to logout without token', async () => {
+      const { UNAUTHORIZED } = configService.get('errorMessages') as {
+        UNAUTHORIZED: string;
+      };
       const res = await request(app.getHttpServer()).post('/user/logout');
       expect(res.status).toBe(401);
-      expect(res.body.messages).toContain(
-        'You are not authorized to access this resource.',
-      );
+      expect(res.body.messages).toContain(UNAUTHORIZED);
     });
   });
 });

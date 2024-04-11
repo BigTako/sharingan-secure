@@ -26,16 +26,16 @@ export class AuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
-    const { UNATHORIZED } = this.errorMessages;
+    const { UNAUTHORIZED } = this.errorMessages;
 
     if (!token) {
-      throw new UnauthorizedException(UNATHORIZED);
+      throw new UnauthorizedException(UNAUTHORIZED);
     }
 
     const isWhitelisted = await this.redis.exists(`whitelist:${token}`);
 
     if (!isWhitelisted) {
-      throw new UnauthorizedException(UNATHORIZED);
+      throw new UnauthorizedException(UNAUTHORIZED);
     }
 
     try {
@@ -46,7 +46,7 @@ export class AuthGuard implements CanActivate {
       request['user'] = payload?.user || {};
       request['token'] = token;
     } catch (error: any) {
-      throw new UnauthorizedException(UNATHORIZED);
+      throw new UnauthorizedException(UNAUTHORIZED);
     }
     return true;
   }
