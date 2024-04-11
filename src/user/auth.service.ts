@@ -5,15 +5,25 @@ import { LoginDto } from './dto/login.dto';
 import { CryptoService } from './crypto.service';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Redis } from 'ioredis';
+import { ConfigService } from '@nestjs/config';
+import { ErrorMessage, OneArgMessage, TwoArgsMessage } from '../config';
 
 @Injectable()
 export class AuthService {
+  private errorMessages: Record<string, ErrorMessage>;
   constructor(
     private userService: UserService,
     private cryptoService: CryptoService,
+    private configService: ConfigService,
     @InjectRedis() private redis: Redis,
-  ) {}
+  ) {
+    this.errorMessages = this.configService.get('errorMessages');
+  }
   async singUp(data: CreateUserDto) {
+    const { ENTITY_EXISTS, UNKNOWN } = this.errorMessages as {
+      ENTITY_EXISTS: TwoArgsMessage;
+      UNKNOWN: OneArgMessage;
+    };
     try {
       const user = await this.userService.create(data);
       const jwt = await this.cryptoService.singToken(user);
@@ -31,21 +41,18 @@ export class AuthService {
         const fieldRegexp = /Key \((.*?)\)=/;
         const match = error.detail.match(fieldRegexp);
         const field = match ? match[1] : 'X';
-        throw new BadRequestException(
-          `User with this ${field} already exists.Please try another one.`,
-        );
+        throw new BadRequestException(ENTITY_EXISTS('User', field));
       }
-      throw new BadRequestException(
-        `Something went wrong. ${process.env.NODE_ENV !== 'production' ? error.message : ''}`,
-      );
+      throw new BadRequestException(UNKNOWN('Please try again later.'));
     }
   }
 
   async logIn({ username, password }: LoginDto) {
+    const { INVALID_CREDENTIALS } = this.errorMessages;
     const user = await this.userService.findOne({ username });
 
     if (!(await this.cryptoService.correctPassword(user.password, password))) {
-      throw new BadRequestException('Invalid login or password');
+      throw new BadRequestException(INVALID_CREDENTIALS);
     }
 
     const jwt = await this.cryptoService.singToken(user);

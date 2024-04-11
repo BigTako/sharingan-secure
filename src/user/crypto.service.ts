@@ -7,10 +7,18 @@ import { JwtService } from '@nestjs/jwt';
 const scrypt = promisify(_scrypt);
 import crypto from 'crypto';
 import { User } from './user.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CryptoService {
-  constructor(private jwtService: JwtService) {}
+  private errorMessages: Record<string, string>;
+
+  constructor(
+    private jwtService: JwtService,
+    private configService: ConfigService,
+  ) {
+    this.errorMessages = this.configService.get('errorMessages');
+  }
 
   async hashPassword(password: string): Promise<string> {
     const salt = randomBytes(8).toString('hex');
@@ -42,12 +50,13 @@ export class CryptoService {
   }
 
   async singToken(user: User): Promise<string> {
+    const { JWT_CREATION_ERROR } = this.errorMessages;
     try {
       return await this.jwtService.signAsync({
         user: { ...user, password: undefined },
       });
     } catch (e) {
-      throw new BadRequestException('Unable to create JWT token.');
+      throw new BadRequestException(JWT_CREATION_ERROR);
     }
   }
 

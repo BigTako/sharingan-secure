@@ -19,10 +19,10 @@ describe('AppController (e2e)', () => {
     await app.init();
     dataSource = app.get(DataSource);
     dataSource.synchronize();
-    // crear database before test runs
   });
 
   beforeEach(async () => {
+    // clear database before each test runs
     await dataSource.createQueryBuilder().delete().from(User).execute();
   });
 
@@ -64,7 +64,7 @@ describe('AppController (e2e)', () => {
         .send(testUser);
       expect(res.status).toBe(400);
       expect(res.body.messages).toContain(
-        'User with this username already exists.Please try another one.',
+        'User with this username already exists. Please try another one.',
       );
     });
 

@@ -9,31 +9,33 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { Redis } from 'ioredis';
 import { InjectRedis } from '@nestjs-modules/ioredis';
+import { ErrorMessage } from '../config';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+  private errorMessages: Record<string, ErrorMessage>;
+
   constructor(
     @InjectRedis() private redis: Redis,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) {}
+  ) {
+    this.errorMessages = this.configService.get('errorMessages');
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
+    const { UNATHORIZED } = this.errorMessages;
 
     if (!token) {
-      throw new UnauthorizedException(
-        'You are not authorized to access this resource.',
-      );
+      throw new UnauthorizedException(UNATHORIZED);
     }
 
     const isWhitelisted = await this.redis.exists(`whitelist:${token}`);
 
     if (!isWhitelisted) {
-      throw new UnauthorizedException(
-        'You are not authorized to access this resource.',
-      );
+      throw new UnauthorizedException(UNATHORIZED);
     }
 
     try {
@@ -44,9 +46,7 @@ export class AuthGuard implements CanActivate {
       request['user'] = payload?.user || {};
       request['token'] = token;
     } catch (error: any) {
-      throw new UnauthorizedException(
-        'You are not authorized to access this resource.',
-      );
+      throw new UnauthorizedException(UNATHORIZED);
     }
     return true;
   }
