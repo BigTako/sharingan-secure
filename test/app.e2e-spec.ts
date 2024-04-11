@@ -4,7 +4,7 @@ import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { DataSource } from 'typeorm';
 import { User } from './../src/user/user.entity';
-import { TwoArgsMessage } from '../src/config';
+import { ErrorMessage, TwoArgsMessage } from '../src/config';
 import { ConfigService } from '@nestjs/config';
 
 process.env.NODE_ENV = 'test';
@@ -12,7 +12,7 @@ process.env.NODE_ENV = 'test';
 describe('AppController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
-  let configService: ConfigService;
+  let errorMessages: Record<string, ErrorMessage>;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -22,6 +22,9 @@ describe('AppController (e2e)', () => {
     app = moduleFixture.createNestApplication();
 
     await app.init();
+
+    errorMessages = app.get<ConfigService>(ConfigService).get('errorMessages');
+
     dataSource = app.get(DataSource);
     dataSource.synchronize();
   });
@@ -29,7 +32,6 @@ describe('AppController (e2e)', () => {
   beforeEach(async () => {
     // clear database before each test runs
     await dataSource.createQueryBuilder().delete().from(User).execute();
-    configService = app.get<ConfigService>(ConfigService);
   });
 
   afterAll(async () => {
@@ -64,7 +66,7 @@ describe('AppController (e2e)', () => {
     });
 
     it('throws BadRequestException trying to signup user with existing username', async () => {
-      const { ENTITY_EXISTS } = configService.get('errorMessages') as {
+      const { ENTITY_EXISTS } = errorMessages as {
         ENTITY_EXISTS: TwoArgsMessage;
       };
 
@@ -77,7 +79,7 @@ describe('AppController (e2e)', () => {
     });
 
     it('throws BadRequestException trying to signup with invalid password', async () => {
-      const { INVALID_LENGTH_MIN } = configService.get('errorMessages') as {
+      const { INVALID_LENGTH_MIN } = errorMessages as {
         INVALID_LENGTH_MIN: TwoArgsMessage;
       };
 
@@ -99,7 +101,7 @@ describe('AppController (e2e)', () => {
     });
 
     it('throws BadRequestException trying to signup user without username', async () => {
-      const { INVALID_TYPE } = configService.get('errorMessages') as {
+      const { INVALID_TYPE } = errorMessages as {
         INVALID_TYPE: TwoArgsMessage;
       };
 
@@ -122,7 +124,7 @@ describe('AppController (e2e)', () => {
     });
 
     it('throws BadRequestException if credentials are not valid', async () => {
-      const { INVALID_CREDENTIALS } = configService.get('errorMessages') as {
+      const { INVALID_CREDENTIALS } = errorMessages as {
         INVALID_CREDENTIALS: string;
       };
 
@@ -140,7 +142,7 @@ describe('AppController (e2e)', () => {
     });
 
     it('throws BadRequestException trying to login user with invalid password', async () => {
-      const { INVALID_LENGTH_MIN } = configService.get('errorMessages') as {
+      const { INVALID_LENGTH_MIN } = errorMessages as {
         INVALID_LENGTH_MIN: TwoArgsMessage;
       };
 
@@ -156,7 +158,7 @@ describe('AppController (e2e)', () => {
     });
 
     it('throws BadRequestException trying to login user with invalid credentials', async () => {
-      const { INVALID_TYPE } = configService.get('errorMessages') as {
+      const { INVALID_TYPE } = errorMessages as {
         INVALID_TYPE: TwoArgsMessage;
       };
 
@@ -213,7 +215,7 @@ describe('AppController (e2e)', () => {
     });
 
     it('throws UnauthorizedException trying to get current user without token', async () => {
-      const { UNAUTHORIZED } = configService.get('errorMessages') as {
+      const { UNAUTHORIZED } = errorMessages as {
         UNAUTHORIZED: string;
       };
       const res = await request(app.getHttpServer()).get('/user/me');
@@ -237,7 +239,7 @@ describe('AppController (e2e)', () => {
     });
 
     it('throws UnauthorizedException trying to logout without token', async () => {
-      const { UNAUTHORIZED } = configService.get('errorMessages') as {
+      const { UNAUTHORIZED } = errorMessages as {
         UNAUTHORIZED: string;
       };
       const res = await request(app.getHttpServer()).post('/user/logout');
