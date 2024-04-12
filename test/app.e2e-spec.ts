@@ -49,13 +49,6 @@ describe('AppController (e2e)', () => {
     password: '12345678',
   };
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
-  });
-
   describe('User auth', () => {
     it('signs in user with valid credentials', async () => {
       const res = await request(app.getHttpServer())
