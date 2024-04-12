@@ -1,10 +1,12 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './services/auth.service';
 import { Serialize } from '../decorators/serialize.decorator';
-import { LoginDto } from './dto/login.dto';
-import { AuthResponseDto } from './dto/auth-response.dto';
-import { UserResponseDto } from './dto/user-response.dto';
-import { CreateUserDto } from './dto/create-user.dto';
+import {
+  AuthResponseDto,
+  CreateUserDto,
+  UserResponseDto,
+  LoginDto,
+} from './dto';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthGuard } from '../guards/auth.guard';
 
