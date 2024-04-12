@@ -46,7 +46,8 @@ describe('CryptoService', () => {
   it('should compare a password and a hash', async () => {
     const password = 'password';
     const hashedPassword = await service.hashPassword(password);
-    const isMatch = await service.correctPassword(password, hashedPassword);
+
+    const isMatch = await service.correctPassword(hashedPassword, password);
     expect(isMatch).toBe(true);
   });
 

@@ -4,7 +4,7 @@ import {
   EventSubscriber,
   InsertEvent,
 } from 'typeorm';
-import { CryptoService } from './services/crypto.service';
+import { CryptoService } from './services';
 import { User } from './user.entity';
 
 @EventSubscriber()

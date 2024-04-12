@@ -1,8 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { UserService } from '../user.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { LoginDto } from '../dto/login.dto';
-import { CryptoService } from './crypto.service';
+import { CryptoService, UserService } from '../services';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Redis } from 'ioredis';
 import { ConfigService } from '@nestjs/config';
