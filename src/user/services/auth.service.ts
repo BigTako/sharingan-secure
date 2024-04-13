@@ -47,7 +47,12 @@ export class AuthService {
 
   async logIn({ username, password }: LoginDto) {
     const { INVALID_CREDENTIALS } = this.errorMessages;
-    const user = await this.userService.findOne({ username });
+    let user;
+    try {
+      user = await this.userService.findOne({ username });
+    } catch (error: any) {
+      throw new BadRequestException(INVALID_CREDENTIALS);
+    }
 
     if (!(await this.cryptoService.correctPassword(user.password, password))) {
       throw new BadRequestException(INVALID_CREDENTIALS);

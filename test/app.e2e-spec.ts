@@ -116,7 +116,25 @@ describe('AppController (e2e)', () => {
       expect(typeof res.body.jwt).toBe('string');
     });
 
-    it('throws BadRequestException if credentials are not valid', async () => {
+    it('throws BadRequestException if user does not exist on login', async () => {
+      const { INVALID_CREDENTIALS } = errorMessages as {
+        INVALID_CREDENTIALS: string;
+      };
+
+      await request(app.getHttpServer()).post('/user/signup').send(testUser);
+
+      const res = await request(app.getHttpServer())
+        .post('/user/login')
+        .send({
+          username: testUser.username + '1',
+          password: testUser.password,
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.messages).toContain(INVALID_CREDENTIALS);
+    });
+
+    it('throws BadRequestException if credentials are not valid on signup', async () => {
       const { INVALID_CREDENTIALS } = errorMessages as {
         INVALID_CREDENTIALS: string;
       };

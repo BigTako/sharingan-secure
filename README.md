@@ -33,6 +33,7 @@ Next launch 2 databases (with `psql` or something) with credentials identical fo
 
 ### Run migrations
 
+1. Build an application using `npm run build` to compile DB schema
 1. Run migrations on development db, using:
 
 ```bash
