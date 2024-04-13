@@ -7,7 +7,7 @@ import {
   UserResponseDto,
   LoginDto,
 } from './dto';
-import { CurrentUser } from './decorators/current-user.decorator';
+import { CurrentUser } from './current-user.decorator';
 import { AuthGuard } from '../guards/auth.guard';
 
 @Controller('user')
